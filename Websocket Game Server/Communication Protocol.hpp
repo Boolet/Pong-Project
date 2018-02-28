@@ -25,6 +25,7 @@ public:
     static std::string scoreUpdateMessage(Score* score);
     static std::string objectRemovedMessage(Bounds* object);
     
+    static std::string timestamp();
     static std::string timestamp(double time);
     static std::string appendTimestamp(std::string message, double time);
     
