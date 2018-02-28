@@ -1,0 +1,253 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset='UTF-8' />
+	<style>
+		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
+        #PlayerID {line-height:20px}
+        #ip {line-height:20px}
+        #port {line-height:20px}
+		#body {max-width:800px;margin:auto}
+		#log {width:0%;height:0px}
+		#message {width:0%;line-height:0px}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script src="fancywebsocket.js"></script>
+	<script>
+        var Server;
+        let msg;
+        var objArray = [];
+        var scoreArray = [];
+        // "deltaY":10
+        // "\"deltaY\":10"
+
+		function log( text ) {
+			$log = $('#log');
+			//Add text to log
+			//$log.append(($log.val()?"\n":'')+text);
+			//Autoscroll
+		    //$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
+			$log.text(text);
+		}
+
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+
+        function connect(){
+            log('Connecting...');
+			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					send( this.value );
+
+					$(this).val('');
+				}
+			});
+
+			//Let the user know we're connected
+			Server.bind('open', function() {
+			    document.getElementById("cntBtn").disabled = true;
+			    log(document.getElementById("PlayerID").value);
+			    send("HELO" + document.getElementById("PlayerID").value);
+				//log( "Connected." );
+			});
+
+			//OH NOES! Disconnection occurred.
+			Server.bind('close', function( data ) {
+                document.getElementById("cntBtn").disabled = false;
+				log( "Disconnected." );
+			});
+
+			//Log any messages sent from server
+			Server.bind('message', function( payload ) {
+			    //log(payload);
+			    //msg = JSON.parse(payload);
+			    var temp = payload.split(":");
+			    var result = "";
+			    for (var i in temp)
+			    {
+			        result += temp[i];
+			        result += " ";
+			    }
+			    //log(result);
+			    if (temp[0] == "SCRCHN")
+			    {
+			        scoreArray[parseInt(temp[1])] = [temp[2], parseInt(temp[3])];
+			    }
+			    else
+			    {
+			        objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
+			    }
+			    //log(msg.objects[0].x);
+			    //log("Score: " + msg.scores[0].score);
+			    redraw(objArray, scoreArray);
+			    //Boundary = new component(msg.objects[0].width, msg.objects[0].height, "black", msg.objects[0].x, msg.objects[0].y);
+			    //Ball = new component(msg.objects[5].width, msg.objects[5].height, "red", msg.objects[5].x, msg.objects[5].y);
+			});
+
+			Server.connect();
+        }
+        
+        function redraw(msg, score){
+        	myGameArea.clear();
+        	for(var i in msg){
+        	    //log(i);
+        	    (new component(msg[i][2], msg[i][3], "black", msg[i][0], msg[i][1], "object")).update();
+        	}
+        	var Score1 = new component("30px", "Consolas", "black", 650, 40, "text");
+        	Score1.text= score[0][0] + ": " + score[0][1];
+        	Score1.update();
+        	var Score2 = new component("30px", "Consolas", "black", 650, 70, "text");
+        	Score2.text= score[1][0] + ": " + score[1][1];
+        	Score2.update();
+        	var Score3 = new component("30px", "Consolas", "black", 650, 100, "text");
+        	Score3.text= score[2][0] + ": " + score[2][1];
+        	Score3.update();
+        	var Score4 = new component("30px", "Consolas", "black", 650, 130, "text");
+        	Score4.text= score[3][0] + ": " + score[3][1];
+        	Score4.update();
+        }
+
+        function disconnect()
+        {
+            //Server.bind('open', function () {
+            //    document.getElementById("dscBtn").disabled = false;
+            //});
+            //Server.bind('close', function ( data ) {
+            //    document.getElementById("dscBtn").disabled = true;
+            //    log("Disconnected.");
+            //});
+            Server.disconnect();
+        }
+
+        var Player1Paddle;
+        var Ball;
+
+        function startGame()
+        {
+            //Player1Paddle = new component(500, 500, "blue", 0, 0);
+            //Boundary = new component(msg.objects[0].width, msg.objects[0].height, "black", msg.objects[0].x, msg.objects[0].y);
+            //Ball = new component(msg.objects[5].width, msg.objects[5].height, "red", msg.objects[5].x, msg.objects[5].y);
+            myGameArea.start();
+            updateGameArea();
+        }
+
+        var myGameArea = {
+            canvas: document.createElement("canvas"),
+            start: function () {
+                this.canvas.width = 950;
+                this.canvas.height = 550;
+                this.context = this.canvas.getContext("2d");
+                document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                this.interval = setInterval(updateGameArea, 20);
+                window.addEventListener('keydown', function (e) {
+                    myGameArea.keys = (myGameArea.keys || []);
+                    myGameArea.keys[e.keyCode] = true;
+                })
+                window.addEventListener('keyup', function (e) {
+                    myGameArea.keys[e.keyCode] = false;
+                })
+            },
+
+            clear: function () {
+                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
+        function component(width, height, color, x, y, type)
+        {
+        	this.type = type;
+            this.width = width;
+            this.height = height;
+            this.speedX = 0;
+            this.speedY = 0;
+            this.x = x;
+            this.y = y;
+            this.update = function ()
+            {
+                ctx = myGameArea.context;
+                if(this.type == "text")
+                {
+                	ctx.font = this.width + " " + this.height;
+                	ctx.fillStyle = color;
+                	ctx.fillText(this.text, this.x, this.y);
+                }
+                else
+                {
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+            this.newPos = function()
+            {
+                this.x += this.speedX;
+                this.y += this.speedY;
+            }
+        }
+
+        /*
+        function updateGameArea()
+        {
+            //myGameArea.clear();
+            //Player1Paddle.speedX = 0;
+            //Player1Paddle.speedY = 0;
+            var time = 0;
+            if (time >= 1000) {
+                if (myGameArea.keys && myGameArea.keys[38]) {
+                    this.send("{\"deltaY\":-10.0}");
+                }
+                if (myGameArea.keys && myGameArea.keys[40]) {
+                    this.send("{\"deltaY\":10.0}");
+                }
+                time = 0;
+            }
+            time++;
+            //Player1Paddle.newPos();
+            //Player1Paddle.update();
+
+        }
+        */
+        
+        var count = 0;
+        function updateGameArea()
+        {
+           if (myGameArea.keys && myGameArea.keys[38]) {
+                this.send("MOVE-1.0");
+                //count--;
+           }
+           if (myGameArea.keys && myGameArea.keys[40]) {
+                this.send("MOVE1.0");
+                //count++;
+           }
+           //var t = setTimeout(startTime, 200);
+			//document.getElementById('txt').innerHTML =
+    			//"Pressed: " + count;
+    		//log(count);
+        }
+
+
+
+	</script>
+</head>
+
+<body onload="startGame()">
+    <div id='body'>
+        PlayerID: <input type='text' id='PlayerID' name='PlayerID'>
+        Server ip: <input type='text' id='ip' name='ip'>
+        Server port: <input type='text' id='port' name='port'>
+        <button type="button" id='cntBtn' onclick="connect();">Connect</button>
+        <button type="button" id='dscBtn' onclick="disconnect();">Disconnect</button> <br />
+        <!--Channel/Port 1 <input type="radio" name="channel" value="8000" /> &nbsp;
+        Channel/Port 2 <input type="radio" name="channel" value="8001" /> &nbsp;
+        Channel/Port 3 <input type="radio" name="channel" value="8002" /> &nbsp;
+        Channel/Port 4 <input type="radio" name="channel" value="8003" />-->
+        <textarea id='log' name='log' readonly='readonly'></textarea><br />
+        <input type='text' id='message' name='message' />
+
+    </div>
+</body>
+
+</html>
