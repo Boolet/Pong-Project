@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <sstream>
+#include <queue>
 #include "Bound.hpp"
 #include "Score.hpp"
 
@@ -19,7 +20,7 @@
 class MessageHandler{
 public:
     
-    //new - send methods
+    //sent message formats
     static std::string objectAddedMessage(Bounds* object);
     static std::string objectUpdateMessage(Bounds* object);
     static std::string scoreUpdateMessage(Score* score);
@@ -29,9 +30,29 @@ public:
     static std::string timestamp(double time);
     static std::string appendTimestamp(std::string message, double time);
     
-    //new - recieve methods
+    //recieve message methods
     static double movementAmount(std::string message);
     static std::string playerName(std::string message);
+    
+    
+    struct QueueMessage{
+        QueueMessage(int newClientID, std::string newMessage, double newTimeQueued)
+        :clientID(newClientID), message(newMessage), timeQueued(newTimeQueued){}
+        
+        int clientID;
+        std::string message;
+        double timeQueued;
+    };
+    
+    
+    //communication functions
+    void queueOutgoingMessage(int clientID, std::string message, double timeQueued);
+    void queueIncomingMessage(int clientID, std::string message, double timeQueued);
+    
+private:
+    std::priority_queue<QueueMessage> outgoingQueue;
+    std::priority_queue<QueueMessage> incomingQueue;
+    
 };
 
 #endif /* Communication_Protocol_hpp */
