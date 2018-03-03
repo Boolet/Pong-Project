@@ -49,3 +49,73 @@ double MessageHandler::movementAmount(std::string message){
 std::string MessageHandler::playerName(std::string message){
     return message.substr(PLAYER_PREFIX_SIZE);
 }
+
+//Methods
+
+double MessageHandler::fixedLatency(){
+    return maximumLatency > minimumLatency ? maximumLatency : minimumLatency;
+}
+
+double MessageHandler::randomLatency(){
+    return minimumLatency + (std::rand() / (double)RAND_MAX) * (maximumLatency - minimumLatency);
+}
+
+double MessageHandler::incrimentalLatency(double timeQueued){
+    double latency = (timeQueued - startTime) * latencyGrowthPerSecond / 1000;
+    latency = minimumLatency < latency ? latency : minimumLatency;
+    latency = maximumLatency > latency ? latency : maximumLatency;
+    return latency;
+}
+
+double MessageHandler::getLatency(double timeQueued){
+    double latency = 0.0;
+    switch (mode) {
+        case FIXED_LATENCY:
+            latency = fixedLatency();
+            break;
+        case RANDOM_LATENCY:
+            latency = randomLatency();
+            break;
+        case INCREMENTAL_LATENCY:
+            latency = incrimentalLatency(timeQueued);
+            break;
+        default:
+            break;
+    }
+    return latency;
+}
+
+void MessageHandler::queueOutgoingMessage(int clientID, std::string message, double timeQueued){
+    double latency = getLatency(timeQueued);
+    outgoingQueue.push(QueueMessage(clientID, message, timeQueued + latency));
+}
+
+void MessageHandler::queueIncomingMessage(int clientID, std::string message, double timeQueued){
+    double latency = getLatency(timeQueued);
+    incomingQueue.push(QueueMessage(clientID, message, timeQueued + latency));
+}
+
+MessageHandler::QueueMessage MessageHandler::popIncomingMessage(double currentTime){
+    QueueMessage top = incomingQueue.top();
+    
+    if(top.timeQueued < currentTime){
+        return QueueMessage();
+    }
+    
+    incomingQueue.pop();
+    return top;
+}
+
+MessageHandler::QueueMessage MessageHandler::popOutgoingMessage(double currentTime){
+    QueueMessage top = outgoingQueue.top();
+    
+    if(top.timeQueued < currentTime){
+        return QueueMessage();
+    }
+    
+    outgoingQueue.pop();
+    return top;
+}
+
+
+
