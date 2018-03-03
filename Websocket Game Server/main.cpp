@@ -143,7 +143,7 @@ void openHandler(int clientID){
         startTimeSet = true;
     }
     
-    std::cout << "New client ID is: " << clientID << ". Current number of clients: " << clientIDs.size() << std::endl;
+    //std::cout << "New client ID is: " << clientID << ". Current number of clients: " << clientIDs.size() << std::endl;
     
     if(clientIDs.size() > MAX_PLAYERS){
         server.wsClose(clientID);
@@ -167,7 +167,7 @@ void openHandler(int clientID){
 
 /* called when a client disconnects */
 void closeHandler(int clientID){
-    std::cout << "Client " << clientID <<" disconnected" << std::endl;
+    //std::cout << "Client " << clientID <<" disconnected" << std::endl;
     if(clientID < MAX_PLAYERS)
     scoreboard[paddles[clientID]]->ownerName = DEFAULT_SCORE_NAME;
 }
@@ -181,7 +181,7 @@ void messageHandler(int clientID, std::string message){
     double current = std::chrono::duration_cast< std::chrono::milliseconds >(
                                                                              std::chrono::system_clock::now().time_since_epoch()).count();
     
-    std::cout << "Input from " << clientID << " containing: " << message << std::endl;
+    //std::cout << "Input from " << clientID << " containing: " << message << std::endl;
     meHandles.queueIncomingMessage(clientID,  message,current);
     //change this to queuing the incoming message
    // switchOnMessageType(clientID, message);
