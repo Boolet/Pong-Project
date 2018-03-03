@@ -227,14 +227,14 @@
 				//inputTimeUp = Date.now() <<would keep track of the time input was sent to the server
 				//might need to make sure it gets stored in a data structure so it's not lost before it's used
 				//to compare it with the server response timestamp (Date.now is in milliseconds)
-                this.send("MOVE-1.0");
+                this.send("MOVE:-1.0:");
                 //count--;
            }
            if (myGameArea.keys && myGameArea.keys[40]) {
 				//inputTimeDown = Date.now() <<would keep track of the time input was sent to the server				
                 //might need to make sure it gets stored in a data structure so it's not lost before it's used
 				//to compare it with the server response timestamp (Date.now is in milliseconds)
-				this.send("MOVE1.0");
+				this.send("MOVE:1.0:");
                 //count++;
            }
            //var t = setTimeout(startTime, 200);
