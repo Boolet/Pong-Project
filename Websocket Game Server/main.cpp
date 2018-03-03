@@ -112,13 +112,21 @@ void setPlayerName(int clientID, std::string message){
 
 //detemines what type of message it is and calls the correct handler
 void switchOnMessageType(int clientID, std::string message){
-    if(message.substr(0, PLAYER_PREFIX_SIZE) == PLAYER_HELLO){
-        setPlayerName(clientID, message);
-    } else if(message.substr(0, PLAYER_PREFIX_SIZE) == PLAYER_MOVE){
-        updateGameData(clientID, message);
+    std::vector<std::string> splitMessage = MessageHandler::split(message, ':');
+    
+    if(splitMessage[0] == PLAYER_HELLO){
+        setPlayerName(clientID, splitMessage[1]);
+    } else if(splitMessage[0] == PLAYER_MOVE){
+        updateGameData(clientID, splitMessage[1]);
     } else {
         std::cout << "Incorrect message format:" << message << std::endl;
     }
+    
+    //this could be the cause of errors in the future; watch out.
+    double timeStamp = std::stod(splitMessage[2]);
+    double current = std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
+    std::cout << "Sent: " << timeStamp << ", Recieved: " << current << ", Latency: " << current - timeStamp << std::endl;
 }
 
 

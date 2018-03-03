@@ -42,12 +42,22 @@ std::string MessageHandler::timestamp(){
     return timestamp(currentTime);
 }
 
-double MessageHandler::movementAmount(std::string message){
-    return std::stod(message.substr(PLAYER_PREFIX_SIZE));
+std::vector<std::string> MessageHandler::split(const std::string &s, char delim) {
+    std::stringstream ss(s);
+    std::string item;
+    std::vector<std::string> tokens;
+    while (getline(ss, item, delim)) {
+        tokens.push_back(item);
+    }
+    return tokens;
 }
 
-std::string MessageHandler::playerName(std::string message){
-    return message.substr(PLAYER_PREFIX_SIZE);
+double MessageHandler::movementAmount(std::string amountString){
+    return std::stod(amountString);
+}
+
+std::string MessageHandler::playerName(std::string nameString){
+    return nameString;
 }
 
 
@@ -62,7 +72,7 @@ double MessageHandler::randomLatency(){
 }
 
 double MessageHandler::incrimentalLatency(double timeQueued){
-    double latency = (timeQueued - startTime) * latencyGrowthPerSecond / 1000;
+    double latency = (timeQueued - startTime) * latencyGrowthPerSecond;
     latency = minimumLatency < latency ? latency : minimumLatency;
     latency = maximumLatency > latency ? latency : maximumLatency;
     return latency;

@@ -37,9 +37,11 @@ public:
     static std::string timestamp(double time);
     static std::string appendTimestamp(std::string message, double time);
     
+    static std::vector<std::string> split(const std::string &s, char delim);
+    
     //recieve message methods
-    static double movementAmount(std::string message);
-    static std::string playerName(std::string message);
+    static double movementAmount(std::string amountString);
+    static std::string playerName(std::string nameString);
     
     
     struct QueueMessage{
