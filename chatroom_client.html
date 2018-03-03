@@ -29,10 +29,10 @@
 		function log( text ) {
 			$log = $('#log');
 			//Add text to log
-			//$log.append(($log.val()?"\n":'')+text);
+			$log.append(($log.val()?"\n":'')+text);
 			//Autoscroll
 		    //$log[0].scrollTop = $log[0].scrollHeight - $log[0].clientHeight;
-			$log.text(text);
+			//$log.text(text);
 		}
 
 		function send( text ) {
@@ -88,7 +88,6 @@
 			        objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
 			        timestamp = parseFloat(temp[temp.length - 1]);
 			        Latency = d.getTime() - timestamp;
-			        Latency * -1;
 			        log(Latency);
 					//here is where we need to do the calculation for the client side delay with the use of either
 					//inputTimeDown or inputTimeUp and timestamp. We need to make sure we get the right inputTime for 
