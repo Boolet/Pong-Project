@@ -132,14 +132,22 @@ void openHandler(int clientID){
         return;
     }
     //declare a time variable here
+    double current = std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
     
+
     //send information for every object
     for (int i = 0; i < 4; ++i) {
-        server.wsSend(clientID, MessageHandler::objectAddedMessage(paddles[i]));
-        server.wsSend(clientID, MessageHandler::objectAddedMessage(walls[i]));
-        server.wsSend(clientID, MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]));
+        
+        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectAddedMessage(paddles[i]), current);
+        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectAddedMessage(walls[i]), current);
+        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]), current);
+        //server.wsSend(clientID, MessageHandler::objectAddedMessage(paddles[i]));
+        //server.wsSend(clientID, MessageHandler::objectAddedMessage(walls[i]));
+        //server.wsSend(clientID, MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]));
     }
-    server.wsSend(clientID, MessageHandler::objectAddedMessage(ball));
+    meHandles.queueOutgoingMessage(clientID,  MessageHandler::objectAddedMessage(ball), current);
+    //server.wsSend(clientID, MessageHandler::objectAddedMessage(ball));
 }
 
 /* called when a client disconnects */
@@ -155,10 +163,13 @@ void closeHandler(int clientID){
 
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, std::string message){
-    std::cout << "Input from " << clientID << " containing: " << message << std::endl;
+    double current = std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
     
+    std::cout << "Input from " << clientID << " containing: " << message << std::endl;
+    meHandles.queueIncomingMessage(clientID,  message,current);
     //change this to queuing the incoming message
-    switchOnMessageType(clientID, message);
+   // switchOnMessageType(clientID, message);
 }
 
 /* called once per select() loop */
