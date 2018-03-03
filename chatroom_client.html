@@ -8,7 +8,7 @@
         #ip {line-height:20px}
         #port {line-height:20px}
 		#body {max-width:800px;margin:auto}
-		#log {width:0%;height:0px}
+		#log {width:0%;height:50px}
 		#message {width:0%;line-height:0px}
 	</style>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
@@ -55,7 +55,7 @@
 			Server.bind('open', function() {
 			    document.getElementById("cntBtn").disabled = true;
 			    log(document.getElementById("PlayerID").value);
-			    send("HELO:" + document.getElementById("PlayerID").value + d.getTime());
+			    send("HELO:" + document.getElementById("PlayerID").value + ":1");
 				//log( "Connected." );
 			});
 
@@ -228,14 +228,16 @@
 				//inputTimeUp = Date.now() <<would keep track of the time input was sent to the server
 				//might need to make sure it gets stored in a data structure so it's not lost before it's used
 				//to compare it with the server response timestamp (Date.now is in milliseconds)
-                this.send("MOVE:-1.0:" + d.getTime());
+               this.send("MOVE:-1.0:1");
+               log(d.getTime());
                 //count--;
            }
            if (myGameArea.keys && myGameArea.keys[40]) {
 				//inputTimeDown = Date.now() <<would keep track of the time input was sent to the server				
                 //might need to make sure it gets stored in a data structure so it's not lost before it's used
 				//to compare it with the server response timestamp (Date.now is in milliseconds)
-				this.send("MOVE:1.0:" + d.getTime());
+               this.send("MOVE:1.0:1");
+               log(d.getTime());
                 //count++;
            }
            //var t = setTimeout(startTime, 200);
