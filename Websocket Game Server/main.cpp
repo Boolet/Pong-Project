@@ -27,6 +27,7 @@
 #define MIN_PLAYERS 4
 
 MessageHandler meHandles(0,1000,1,FIXED_LATENCY);
+bool startTimeSet = false;
 webSocket server;
 GameEngine* engine = new GameEngine();
 Paddle* paddles[4];
@@ -125,23 +126,29 @@ void switchOnMessageType(int clientID, std::string message){
 void openHandler(int clientID){
     std::vector<int> clientIDs = server.getClientIDs();
     
+    //declare a time variable here
+    double current = std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    if(!startTimeSet && clientIDs.size() >= 4){
+        meHandles.setStartTime(current);
+        startTimeSet = true;
+    }
+    
     std::cout << "New client ID is: " << clientID << ". Current number of clients: " << clientIDs.size() << std::endl;
     
     if(clientIDs.size() > MAX_PLAYERS){
         server.wsClose(clientID);
         return;
     }
-    //declare a time variable here
-    double current = std::chrono::duration_cast< std::chrono::milliseconds >(
-                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
     
 
     //send information for every object
     for (int i = 0; i < 4; ++i) {
         
-        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectAddedMessage(paddles[i]), current);
-        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectAddedMessage(walls[i]), current);
-        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]), current);
+        meHandles.queueOutgoingMessage(clientID,  MessageHandler::objectAddedMessage(paddles[i]), current);
+        meHandles.queueOutgoingMessage(clientID,  MessageHandler::objectAddedMessage(walls[i]), current);
+        meHandles.queueOutgoingMessage(clientID,  MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]), current);
         //server.wsSend(clientID, MessageHandler::objectAddedMessage(paddles[i]));
         //server.wsSend(clientID, MessageHandler::objectAddedMessage(walls[i]));
         //server.wsSend(clientID, MessageHandler::scoreUpdateMessage(scoreboard[paddles[i]]));

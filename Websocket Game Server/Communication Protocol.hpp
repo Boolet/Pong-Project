@@ -47,13 +47,18 @@ public:
         QueueMessage(int newClientID, std::string newMessage, double newTimeQueued)
         :clientID(newClientID), message(newMessage), timeQueued(newTimeQueued){}
         
+        bool operator<(QueueMessage other) const
+        {
+            return timeQueued > other.timeQueued;
+        }
+        
         int clientID;
         std::string message;
         double timeQueued;
     };
     
     //instance methods
-    MessageHandler(double minLatency, double maxLatency, double growthPerSecond, int setMode = NO_LATENCY)
+    MessageHandler(double minLatency, double maxLatency, double growthPerSecond, int setMode)
         :minimumLatency(minLatency), maximumLatency(maxLatency), latencyGrowthPerSecond(growthPerSecond), mode(setMode){}
     
     void setStartTime(double time){startTime = time;}
@@ -91,9 +96,10 @@ private:
     double randomLatency();
     double incrimentalLatency(double timeQueued);
     
-    bool queueMessageComparator(QueueMessage a, QueueMessage b){return a.timeQueued > b.timeQueued;}
-    std::priority_queue<QueueMessage, std::vector<QueueMessage>, std::function<bool(QueueMessage,QueueMessage)>> outgoingQueue;
-    std::priority_queue<QueueMessage, std::vector<QueueMessage>, std::function<bool(QueueMessage,QueueMessage)>> incomingQueue;
+    //std::function<bool(QueueMessage,QueueMessage)> cmp = [](QueueMessage a, QueueMessage b){return a.timeQueued > b.timeQueued;};
+    //bool queueMessageComparator(QueueMessage a, QueueMessage b){return a.timeQueued > b.timeQueued;}
+    std::priority_queue<QueueMessage> outgoingQueue;
+    std::priority_queue<QueueMessage> incomingQueue;
     
 };
 

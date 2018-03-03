@@ -102,7 +102,7 @@ MessageHandler::QueueMessage MessageHandler::popIncomingMessage(double currentTi
     
     QueueMessage top = incomingQueue.top();
     
-    if(top.timeQueued < currentTime){
+    if(top.timeQueued > currentTime){
         return QueueMessage();
     }
     
@@ -116,7 +116,7 @@ MessageHandler::QueueMessage MessageHandler::popOutgoingMessage(double currentTi
     
     QueueMessage top = outgoingQueue.top();
     
-    if(top.timeQueued < currentTime){
+    if(top.timeQueued > currentTime){
         return QueueMessage();
     }
     
