@@ -18,6 +18,9 @@
         let msg;
         var objArray = [];
         var scoreArray = [];
+		var inputTimeUp;
+		var inputTimeDown;
+		
         // "deltaY":10
         // "\"deltaY\":10"
 
@@ -67,6 +70,7 @@
 			    //msg = JSON.parse(payload);
 			    var temp = payload.split(":");
 			    var result = "";
+				var timestamp;
 			    for (var i in temp)
 			    {
 			        result += temp[i];
@@ -80,7 +84,12 @@
 			    else
 			    {
 			        objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
+					timestamp = parseFloat(temp[temp.length-1]);
+					//here is where we need to do the calculation for the client side delay with the use of either
+					//inputTimeDown or inputTimeUp and timestamp. We need to make sure we get the right inputTime for 
+					//this calculation.
 			    }
+				
 			    //log(msg.objects[0].x);
 			    //log("Score: " + msg.scores[0].score);
 			    redraw(objArray, scoreArray);
@@ -215,11 +224,17 @@
         function updateGameArea()
         {
            if (myGameArea.keys && myGameArea.keys[38]) {
+				//inputTimeUp = Date.now() <<would keep track of the time input was sent to the server
+				//might need to make sure it gets stored in a data structure so it's not lost before it's used
+				//to compare it with the server response timestamp (Date.now is in milliseconds)
                 this.send("MOVE-1.0");
                 //count--;
            }
            if (myGameArea.keys && myGameArea.keys[40]) {
-                this.send("MOVE1.0");
+				//inputTimeDown = Date.now() <<would keep track of the time input was sent to the server				
+                //might need to make sure it gets stored in a data structure so it's not lost before it's used
+				//to compare it with the server response timestamp (Date.now is in milliseconds)
+				this.send("MOVE1.0");
                 //count++;
            }
            //var t = setTimeout(startTime, 200);
