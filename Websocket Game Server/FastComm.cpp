@@ -50,6 +50,7 @@ std::string MessageHandler::playerName(std::string message){
     return message.substr(PLAYER_PREFIX_SIZE);
 }
 
+
 //Methods
 
 double MessageHandler::fixedLatency(){
@@ -96,6 +97,9 @@ void MessageHandler::queueIncomingMessage(int clientID, std::string message, dou
 }
 
 MessageHandler::QueueMessage MessageHandler::popIncomingMessage(double currentTime){
+    if(incomingQueue.empty())
+        return QueueMessage();
+    
     QueueMessage top = incomingQueue.top();
     
     if(top.timeQueued < currentTime){
@@ -107,6 +111,9 @@ MessageHandler::QueueMessage MessageHandler::popIncomingMessage(double currentTi
 }
 
 MessageHandler::QueueMessage MessageHandler::popOutgoingMessage(double currentTime){
+    if(outgoingQueue.empty())
+        return QueueMessage();
+    
     QueueMessage top = outgoingQueue.top();
     
     if(top.timeQueued < currentTime){
