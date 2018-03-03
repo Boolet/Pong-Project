@@ -53,8 +53,8 @@ public:
     };
     
     //instance methods
-    MessageHandler(double minLatency, double maxLatency, double growthPerSecond)
-        :minimumLatency(minLatency), maximumLatency(maxLatency), latencyGrowthPerSecond(growthPerSecond){}
+    MessageHandler(double minLatency, double maxLatency, double growthPerSecond, int setMode = NO_LATENCY)
+        :minimumLatency(minLatency), maximumLatency(maxLatency), latencyGrowthPerSecond(growthPerSecond), mode(setMode){}
     
     void setStartTime(double time){startTime = time;}
     

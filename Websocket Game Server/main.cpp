@@ -26,6 +26,7 @@
 #define MAX_PLAYERS 4
 #define MIN_PLAYERS 4
 
+MessageHandler meHandles(0,1000,1,FIXED_LATENCY);
 webSocket server;
 GameEngine* engine = new GameEngine();
 Paddle* paddles[4];
@@ -76,10 +77,16 @@ void sendGameData(){
     std::vector<int> clientIDs = server.getClientIDs();
     for (int i = 0; i < clientIDs.size(); i++){
         for (int j = 0; j < 4; ++j) {
-            server.wsSend(clientIDs[i], MessageHandler::objectUpdateMessage(paddles[j]));
-            server.wsSend(clientIDs[i], MessageHandler::scoreUpdateMessage(scoreboard[paddles[j]]));
+            meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectUpdateMessage(paddles[j]), std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                                                                                                                   std::chrono::system_clock::now().time_since_epoch()).count());
+            meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::scoreUpdateMessage(scoreboard[paddles[j]]), std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                                                                                                                              std::chrono::system_clock::now().time_since_epoch()).count());
+            // server.wsSend(clientIDs[i], MessageHandler::objectUpdateMessage(paddles[j]));
+            // server.wsSend(clientIDs[i], MessageHandler::scoreUpdateMessage(scoreboard[paddles[j]]));
         }
-        server.wsSend(clientIDs[i], MessageHandler::objectUpdateMessage(ball));
+        meHandles.queueOutgoingMessage(clientIDs[i],  MessageHandler::objectUpdateMessage(ball), std::chrono::duration_cast< std::chrono::milliseconds >(
+                                                                                                                                                         std::chrono::system_clock::now().time_since_epoch()).count());
+        //server.wsSend(clientIDs[i], MessageHandler::objectUpdateMessage(ball));
     }
 }
 
@@ -90,11 +97,11 @@ void updateGameData(int clientID, std::string message){
     double amount = MessageHandler::movementAmount(message);
     switch(clientID % 2){
         case 0:
-            paddles[clientID]->setY(paddles[clientID]->getY()+amount);
-            break;
+        paddles[clientID]->setY(paddles[clientID]->getY()+amount);
+        break;
         case 1:
-            paddles[clientID]->setX(paddles[clientID]->getX()+amount);
-            break;
+        paddles[clientID]->setX(paddles[clientID]->getX()+amount);
+        break;
     }
 }
 
@@ -124,6 +131,7 @@ void openHandler(int clientID){
         server.wsClose(clientID);
         return;
     }
+    //declare a time variable here
     
     //send information for every object
     for (int i = 0; i < 4; ++i) {
@@ -138,7 +146,7 @@ void openHandler(int clientID){
 void closeHandler(int clientID){
     std::cout << "Client " << clientID <<" disconnected" << std::endl;
     if(clientID < MAX_PLAYERS)
-        scoreboard[paddles[clientID]]->ownerName = DEFAULT_SCORE_NAME;
+    scoreboard[paddles[clientID]]->ownerName = DEFAULT_SCORE_NAME;
 }
 
 /*
@@ -148,15 +156,19 @@ void closeHandler(int clientID){
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, std::string message){
     std::cout << "Input from " << clientID << " containing: " << message << std::endl;
+    
+    //change this to queuing the incoming message
     switchOnMessageType(clientID, message);
 }
 
 /* called once per select() loop */
 void periodicHandler(){
+    
+    //while loop, pop message if time, current
     static double next = std::chrono::duration_cast< std::chrono::milliseconds >(
-                        std::chrono::system_clock::now().time_since_epoch()).count() + TIME_BETWEEN_MESSAGES;
+                                                                                 std::chrono::system_clock::now().time_since_epoch()).count() + TIME_BETWEEN_MESSAGES;
     double current = std::chrono::duration_cast< std::chrono::milliseconds >(
-                        std::chrono::system_clock::now().time_since_epoch()).count();
+                                                                             std::chrono::system_clock::now().time_since_epoch()).count();
     
     std::vector<int> clientIDs = server.getClientIDs();
     if(clientIDs.size() >= MIN_PLAYERS){
@@ -169,8 +181,18 @@ void periodicHandler(){
         //std::cout << "Number of clients: " << clientIDs.size() << std::endl;
         sendGameData();
         next = std::chrono::duration_cast< std::chrono::milliseconds >(
-            std::chrono::system_clock::now().time_since_epoch()).count() + TIME_BETWEEN_MESSAGES;
+                                                                       std::chrono::system_clock::now().time_since_epoch()).count() + TIME_BETWEEN_MESSAGES;
     }
+    
+    MessageHandler::QueueMessage top;
+    while ((top = meHandles.popIncomingMessage(current)).clientID > -1) {
+        switchOnMessageType(top.clientID, top.message);
+    }
+    
+    while ((top = meHandles.popOutgoingMessage(current)).clientID > -1) {
+        server.wsSend(top.clientID, top.message);
+    }
+    
 }
 
 int main(int argc, char *argv[]){
