@@ -16,8 +16,10 @@
 	<script>
         var Server;
         let msg;
+        var clientID;
         var objArray = [];
         var scoreArray = [];
+        var messageArray = [];
 		var inputTimeUp;
 		var inputTimeDown;
 		var d = new Date();
@@ -83,11 +85,28 @@
 			    {
 			        scoreArray[parseInt(temp[1])] = [temp[2], parseInt(temp[3])];
 			    }
+
+			    else if (temp[0] == "NEWCID")
+			    {
+			        clientID = parseInt(temp[1]);
+			    }
 			    else
 			    {
-			        objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
-			        timestamp = parseFloat(temp[temp.length - 1]);
-			        Latency = d.getTime() - timestamp;
+			        if (messageArray.length != 0)
+			        {
+			            if(clientID != parseInt(temp[1]))
+			            {
+			                objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
+			                timestamp = parseFloat(temp[temp.length - 1]);
+			                Latency = d.getTime() - timestamp;
+			            }
+			        }
+			        else
+			        {
+			            objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
+			            timestamp = parseFloat(temp[temp.length - 1]);
+			            Latency = d.getTime() - timestamp;
+			        }
 					//here is where we need to do the calculation for the client side delay with the use of either
 					//inputTimeDown or inputTimeUp and timestamp. We need to make sure we get the right inputTime for 
 					//this calculation.
@@ -229,15 +248,45 @@
            if (myGameArea.keys && myGameArea.keys[38]) {
 				//inputTimeUp = Date.now() <<would keep track of the time input was sent to the server
 				//might need to make sure it gets stored in a data structure so it's not lost before it's used
-				//to compare it with the server response timestamp (Date.now is in milliseconds)
-               this.send("MOVE:-1.0:" + d.getTime());
+               //to compare it with the server response timestamp (Date.now is in milliseconds)
+               if (clientID % 2 == 0)
+               {
+                   this.send("MOVE:-1.0:" + d.getTime());
+                   objArray[clientID][1] += -1.0;
+                   messageArray[clientID] = objArray[clientID];
+                   redraw(objArray, scoreArray);
+               }
+               else if (clientID % 2 != 0)
+               {
+                   this.send("MOVE:-1.0:" + d.getTime());
+                   objArray[clientID][0] += -1.0;
+                   messageArray[clientID] = objArray[clientID];
+                   redraw(objArray, scoreArray);
+               }
+               //this.send("MOVE:-1.0:" + d.getTime());
+
                 //count--;
            }
            if (myGameArea.keys && myGameArea.keys[40]) {
 				//inputTimeDown = Date.now() <<would keep track of the time input was sent to the server				
                 //might need to make sure it gets stored in a data structure so it's not lost before it's used
-				//to compare it with the server response timestamp (Date.now is in milliseconds)
-               this.send("MOVE:1.0:" + d.getTime());
+               //to compare it with the server response timestamp (Date.now is in milliseconds)
+               if (clientID % 2 == 0)
+               {
+                   this.send("MOVE:1.0:" + d.getTime());
+                   objArray[clientID][1] += 1.0;
+                   messageArray[clientID] = objArray[clientID];
+                   redraw(objArray, scoreArray);
+                   
+               }
+               else if (clientID % 2 != 0)
+               {
+                   this.send("MOVE:1.0:" + d.getTime());
+                   objArray[clientID][0] += 1.0;
+                   messageArray[clientID] = objArray[clientID];
+                   redraw(objArray, scoreArray);
+               }
+               //this.send("MOVE:1.0:" + d.getTime());
                 //count++;
            }
            //var t = setTimeout(startTime, 200);
