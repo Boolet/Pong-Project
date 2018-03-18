@@ -24,7 +24,7 @@
 #define PLAY_WIDTH 500
 #define PLAY_HEIGHT 500
 #define MAX_PLAYERS 4
-#define MIN_PLAYERS 4
+#define MIN_PLAYERS 1
 
 MessageHandler meHandles(0,1000,1,FIXED_LATENCY);
 bool startTimeSet = false;
@@ -34,6 +34,7 @@ Paddle* paddles[4];
 Bounds* walls[4];
 Ball* ball;
 std::map<Bounds*, Score*> scoreboard;
+int loggedPlayers[MAX_PLAYERS];
 
 void initGameEngine(){
     //add the objects here
@@ -138,7 +139,7 @@ void openHandler(int clientID){
     double current = std::chrono::duration_cast< std::chrono::milliseconds >(
                                                                              std::chrono::system_clock::now().time_since_epoch()).count();
     
-    if(!startTimeSet && clientIDs.size() >= 4){
+    if(!startTimeSet && clientIDs.size() >= MIN_PLAYERS){
         meHandles.setStartTime(current);
         startTimeSet = true;
     }
@@ -150,6 +151,8 @@ void openHandler(int clientID){
         return;
     }
     
+    //send the client its own ID number
+    meHandles.queueOutgoingMessage(clientID, MessageHandler::clientIDMessage(clientID), current);
 
     //send information for every object
     for (int i = 0; i < 4; ++i) {
@@ -203,20 +206,26 @@ void periodicHandler(){
         engine->Suspend();
     }
     
-    if (current >= next){   //send a message every 1 seconds
+    if (current >= next){   //send a message every TIME_BETWEEN_MESSAGES milliseconds
         //std::cout << "Number of clients: " << clientIDs.size() << std::endl;
         sendGameData();
         next = std::chrono::duration_cast< std::chrono::milliseconds >(
                                                                        std::chrono::system_clock::now().time_since_epoch()).count() + TIME_BETWEEN_MESSAGES;
     }
+    for(int i = 0; i < MAX_PLAYERS; ++i)
+        loggedPlayers[i] = 0;
+    for(auto a : clientIDs)
+        loggedPlayers[a] = 1;
     
     MessageHandler::QueueMessage top;
     while ((top = meHandles.popIncomingMessage(current)).clientID > -1) {
-        switchOnMessageType(top.clientID, top.message);
+        if(loggedPlayers[top.clientID])
+            switchOnMessageType(top.clientID, top.message);
     }
     
     while ((top = meHandles.popOutgoingMessage(current)).clientID > -1) {
-        server.wsSend(top.clientID, top.message);
+        if(loggedPlayers[top.clientID])
+            server.wsSend(top.clientID, top.message);
     }
     
 }

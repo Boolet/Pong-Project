@@ -8,6 +8,7 @@
 #include "Score.hpp"
 
 #define SERVER_PREFIX_SIZE 6
+#define CLIENT_ID_PREFIX "NEWCID"
 #define OBJECT_ADDED "OBJADD"
 #define OBJECT_MODIFIED "OBJMOD"
 #define OBJECT_REMOVED "OBJDEL"
@@ -28,6 +29,7 @@ public:
     //static methods
     
     //sent message formats
+    static std::string clientIDMessage(int ID);
     static std::string objectAddedMessage(Bounds* object);
     static std::string objectUpdateMessage(Bounds* object);
     static std::string scoreUpdateMessage(Score* score);
