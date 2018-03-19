@@ -17,6 +17,8 @@
         var Server;
         let msg;
         var clientID;
+        var ballID;
+        var ballPosition = [];
         var paddleDirection;
         var objArray = [];
         var scoreArray = [];
@@ -92,8 +94,27 @@
 			        clientID = parseInt(temp[1]);
 			        paddleDirection = parseInt(temp[2]);
 			    }
+
+			    else if (temp[0] == "BALLID")
+			    {
+			        ballID = parseInt(temp[1]);
+			    }
 			    else
 			    {
+			        if (ballID == parseInt(temp[1]))
+			        {
+			            if (ballPosition.length == 0)
+			            {
+			                objArray[parseInt(temp[1])] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5])];
+			            }
+			            ballPosition[ballID] = objArray[ballID];
+			            for(var i = 0.0; i < 1.0; i+= 0.1)
+			            {
+			                objArray[ballID][0] = ballPosition[ballID][0] * (1 - i) + (parseFloat(temp[2]) * i);
+			                objArray[ballID][1] = ballPosition[ballID][1] * (1 - i) + (parseFloat(temp[3]) * i);
+			                redraw(objArray, scoreArray);
+			            }
+			        }
 			        if (messageArray.length != 0)
 			        {
 			            if(clientID != parseInt(temp[1]))
@@ -126,7 +147,8 @@
         
         function redraw(msg, score){
         	myGameArea.clear();
-        	for(var i in msg){
+        	for (var i in msg)
+        	{
         	    //log(i);
         	    (new component(msg[i][2], msg[i][3], "black", msg[i][0], msg[i][1], "object")).update();
         	}
