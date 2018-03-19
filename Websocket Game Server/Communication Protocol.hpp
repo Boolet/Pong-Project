@@ -29,7 +29,7 @@ public:
     //static methods
     
     //sent message formats
-    static std::string clientIDMessage(int ID);
+    static std::string paddleIDMessage(int ID, bool vertical);
     static std::string objectAddedMessage(Bounds* object);
     static std::string objectUpdateMessage(Bounds* object);
     static std::string scoreUpdateMessage(Score* score);

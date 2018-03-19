@@ -1,8 +1,8 @@
 #include "Communication Protocol.hpp"
 
-std::string MessageHandler::clientIDMessage(int ID){
+std::string MessageHandler::paddleIDMessage(int ID, bool vertical){
     std::ostringstream os;
-    os << CLIENT_ID_PREFIX << ":" << ID << ":" << timestamp();
+    os << CLIENT_ID_PREFIX << ":" << ID << ":" << vertical << ":" << timestamp();
     return os.str();
 }
 
