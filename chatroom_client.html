@@ -17,6 +17,7 @@
         var Server;
         let msg;
         var clientID;
+        var paddleDirection;
         var objArray = [];
         var scoreArray = [];
         var messageArray = [];
@@ -89,6 +90,7 @@
 			    else if (temp[0] == "NEWCID")
 			    {
 			        clientID = parseInt(temp[1]);
+			        paddleDirection = parseInt(temp[2]);
 			    }
 			    else
 			    {
@@ -249,14 +251,14 @@
 				//inputTimeUp = Date.now() <<would keep track of the time input was sent to the server
 				//might need to make sure it gets stored in a data structure so it's not lost before it's used
                //to compare it with the server response timestamp (Date.now is in milliseconds)
-               if (clientID % 2 == 0)
+               if (paddleDirection == 0)
                {
                    this.send("MOVE:-1.0:" + d.getTime());
                    objArray[clientID][1] += -1.0;
                    messageArray[clientID] = objArray[clientID];
                    redraw(objArray, scoreArray);
                }
-               else if (clientID % 2 != 0)
+               else if (paddleDirection == 1)
                {
                    this.send("MOVE:-1.0:" + d.getTime());
                    objArray[clientID][0] += -1.0;
@@ -271,7 +273,7 @@
 				//inputTimeDown = Date.now() <<would keep track of the time input was sent to the server				
                 //might need to make sure it gets stored in a data structure so it's not lost before it's used
                //to compare it with the server response timestamp (Date.now is in milliseconds)
-               if (clientID % 2 == 0)
+               if (paddleDirection == 0)
                {
                    this.send("MOVE:1.0:" + d.getTime());
                    objArray[clientID][1] += 1.0;
@@ -279,7 +281,7 @@
                    redraw(objArray, scoreArray);
                    
                }
-               else if (clientID % 2 != 0)
+               else if (paddleDirection == 1)
                {
                    this.send("MOVE:1.0:" + d.getTime());
                    objArray[clientID][0] += 1.0;
