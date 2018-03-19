@@ -6,6 +6,12 @@ std::string MessageHandler::paddleIDMessage(int ID, bool vertical){
     return os.str();
 }
 
+std::string MessageHandler::ballIDMessage(int ID){
+    std::ostringstream os;
+    os << BALL_ID_PREFIX << ":" << ID << ":" << timestamp();
+    return os.str();
+}
+
 std::string MessageHandler::objectAddedMessage(Bounds* object){
     std::ostringstream os;
     os << OBJECT_ADDED << ":" << object->getID() << ":" << object->getX() << ":" << object->getY() << ":" << object->getWidth() << ":" << object->getHeight() << ":" << timestamp();

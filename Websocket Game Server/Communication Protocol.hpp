@@ -13,6 +13,7 @@
 #define OBJECT_MODIFIED "OBJMOD"
 #define OBJECT_REMOVED "OBJDEL"
 #define SCORE_CHANGED "SCRCHN"
+#define BALL_ID_PREFIX "BALLID"
 
 #define PLAYER_PREFIX_SIZE 4
 #define PLAYER_MOVE "MOVE"
@@ -30,6 +31,7 @@ public:
     
     //sent message formats
     static std::string paddleIDMessage(int ID, bool vertical);
+    static std::string ballIDMessage(int ID);
     static std::string objectAddedMessage(Bounds* object);
     static std::string objectUpdateMessage(Bounds* object);
     static std::string scoreUpdateMessage(Score* score);

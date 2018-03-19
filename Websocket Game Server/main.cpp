@@ -153,6 +153,7 @@ void openHandler(int clientID){
     
     //send the client its own ID number
     meHandles.queueOutgoingMessage(clientID, MessageHandler::paddleIDMessage(paddles[clientID]->getID(), clientID % 2), current);
+    meHandles.queueOutgoingMessage(clientID, MessageHandler::ballIDMessage(ball->getID()), current);
 
     //send information for every object
     for (int i = 0; i < 4; ++i) {
