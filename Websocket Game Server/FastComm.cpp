@@ -37,9 +37,9 @@ std::string MessageHandler::objectRemovedMessage(Bounds* object){
 }
 
 std::string MessageHandler::timestamp(double time){
-    std::ostringstream os;
-    os << time;
-    return os.str();
+    //std::ostringstream os;
+    //os << time;
+    return std::to_string(time);
 }
 
 std::string MessageHandler::appendTimestamp(std::string message, double time){

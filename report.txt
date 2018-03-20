@@ -1,0 +1,9 @@
+We tried to implement interpolation, but we couldn't get the code to work properly.
+
+The method we tried to implement was:
+1. store, for each object: a previous location and its timestamp, the most recent known location of that object, and an interpolation value in terms of time
+2. each time the server sends an update for an object, set the last-known location to its current location and the timestamp for that location to its old timestamp plus the interpolation value. Then set the interpolation value to 0 and set the most recent known location to the one we just got from the server
+3. at each tick, calculate the position of the object using the last-known position and timestamp, the most recent known location and timestamp, and the interpolation value
+4. increment the interpolation value for each object each tick, using delta time.
+
+I would say we got pretty far, but we did not have time to debug the new client implementation to the point where it would draw properly.

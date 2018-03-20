@@ -1,0 +1,345 @@
+﻿<!doctype html>
+<html>
+<head>
+	<meta charset='UTF-8' />
+	<style>
+		input, textarea {border:1px solid #CCC;margin:0px;padding:0px}
+        #PlayerID {line-height:20px}
+        #ip {line-height:20px}
+        #port {line-height:20px}
+		#body {max-width:800px;margin:auto}
+		#log {width:100%;height:80px}
+		#message {width:0%;line-height:0px}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script src="fancywebsocket.js"></script>
+	<script>
+		var tickInterval = 10;
+		var lastTime = new Date().getTime();
+		var currentTime = new Date().getTime();
+	
+        var Server;
+        let msg;
+        var clientID;
+        var ballID;
+        var ballPosition = [];
+        var paddleDirection;
+        var objArray = [];
+
+        var scoreArray = [];
+        var messageArray = [];
+		var inputTimeUp;
+		var inputTimeDown;
+		var d = new Date();
+		var Latency;
+
+		function log( text ) {
+			$log = $('#log');
+			$log.text(text);
+		}
+
+		function send( text ) {
+			Server.send( 'message', text );
+		}
+
+        function connect(){
+            log('Connecting...');
+			Server = new FancyWebSocket('ws://' + document.getElementById('ip').value + ':' + document.getElementById('port').value);
+
+			$('#message').keypress(function(e) {
+				if ( e.keyCode == 13 && this.value ) {
+					log( 'You: ' + this.value );
+					send( this.value );
+
+					$(this).val('');
+				}
+			});
+
+			//Let the user know we're connected
+			Server.bind('open', function() {
+			    document.getElementById("cntBtn").disabled = true;
+			    //log(document.getElementById("PlayerID").value);
+			    send("HELO:" + document.getElementById("PlayerID").value + ":" + d.getTime());
+				//log( "Connected." );
+			});
+
+			//OH NOES! Disconnection occurred.
+			Server.bind('close', function( data ) {
+                document.getElementById("cntBtn").disabled = false;
+				log( "Disconnected." );
+			});
+
+			//Log any messages sent from server
+			Server.bind('message', function( payload ) {
+			    //log(payload);
+			    //msg = JSON.parse(payload);
+			    var temp = payload.split(":");
+			    var result = "";
+			    for (var i in temp)
+			    {
+			        result += temp[i];
+			        result += " ";
+			    }
+			    //log(result);
+			    if (temp[0] == "SCRCHN")
+			    {
+			        scoreArray[parseInt(temp[1])] = [temp[2], parseInt(temp[3])];
+			    }
+
+			    else if (temp[0] == "NEWCID")
+			    {
+			        clientID = parseInt(temp[1]);
+			        paddleDirection = parseInt(temp[2]);
+			    }
+
+			    else if (temp[0] == "BALLID")
+			    {
+			        ballID = parseInt(temp[1]);
+			    }
+			    else if (temp[0] == "OBJADD")
+			    {
+			    	//get new object message
+			        //objArray[index] = [[x, y, width, height, timestamp], [x, y, width, height, timestamp], timeSinceLast]
+			        var timestamp = parseFloat(temp[temp.length - 1]);
+			        
+			        var data = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5]), timestamp];
+			        //log(data[0]);
+					objArray[parseInt(temp[1])] = [];
+					
+			        objArray[parseInt(temp[1])][0] = data;
+			        objArray[parseInt(temp[1])][1] = data;
+			        objArray[parseInt(temp[1])][2] = 0;
+			    }
+			    else
+			    {
+			        //get update message
+			        //objArray[index] = [[x, y, width, height, timestamp], [x, y, width, height, timestamp], timeSinceLast]
+			        var timestamp = parseFloat(temp[temp.length - 1]);
+			        if(timestamp < objArray[parseInt(temp[1])][1][4])
+			        	return;
+			        
+			        //if(parseInt(temp[1]) == ballID)
+			        log("0");
+			        
+			        objArray[parseInt(temp[1])][0] = interpolateObj(objArray[parseInt(temp[1])]);
+			        log("1");
+			        objArray[parseInt(temp[1])][0][4] = objArray[parseInt(temp[1])][0][4] + objArray[parseInt(temp[1])][2];
+			        log("2");
+			        objArray[parseInt(temp[1])][2] = 0;
+			        log("3");
+			        objArray[parseInt(temp[1])][1] = [parseFloat(temp[2]), parseFloat(temp[3]), parseFloat(temp[4]), parseFloat(temp[5]), timestamp];
+			        
+			        log("new timestamp" + timestamp + " old timestamp: " + objArray[parseInt(temp[1])][1][4] + " time since last " + objArray[parseInt(temp[1])][2]);
+			    	
+			    }
+			});
+
+			Server.connect();
+        }
+        
+        
+        //-----------------------------------------------------------------
+        // REDRAW
+        //-----------------------------------------------------------------
+        function redraw(msg, score, deltaTime){
+        	myGameArea.clear();
+        	//log(msg.toString());
+        	var result = "";
+        	for (var i in msg)
+        	{
+        		result += "[" + msg[i].toString() + "]";
+        		//log(i.toString());
+        		var interpPos = interpolateObj(msg[i]);
+        		//interpolate here
+        		//log(interpPos.toString());
+        	
+        	    (new component(interpPos[2], interpPos[3], "black", interpPos[0], interpPos[1], "object")).update();
+        	}
+        	//log(result);
+        	if(score.length < 4)
+        		return;
+        	var Score1 = new component("30px", "Consolas", "black", 650, 40, "text");
+        	Score1.text= score[0][0] + ": " + score[0][1];
+        	Score1.update();
+        	var Score2 = new component("30px", "Consolas", "black", 650, 70, "text");
+        	Score2.text= score[1][0] + ": " + score[1][1];
+        	Score2.update();
+        	var Score3 = new component("30px", "Consolas", "black", 650, 100, "text");
+        	Score3.text= score[2][0] + ": " + score[2][1];
+        	Score3.update();
+        	var Score4 = new component("30px", "Consolas", "black", 650, 130, "text");
+        	Score4.text= score[3][0] + ": " + score[3][1];
+        	Score4.update();
+        }
+
+        function disconnect()
+        {
+            Server.disconnect();
+        }
+
+        var Player1Paddle;
+        var Ball;
+
+        function startGame()
+        {
+            myGameArea.start();
+            //updateGameArea();
+            gameLoop();
+        }
+        
+        //-----------------------------------------------------------------
+        // GAME LOOP
+        //-----------------------------------------------------------------
+        function gameLoop(){
+        	
+        	currentTime = new Date().getTime();
+        	//updateGameArea(currentTime - lastTime);
+        	interpolateObjects(currentTime - lastTime);
+        	
+        	redraw(objArray, scoreArray, currentTime - lastTime);
+        	//log("1");
+        	lastTime = currentTime;
+        	setTimeout(gameLoop, tickInterval);
+        }
+        
+        function interpolateObjects(deltaTime){
+        	for( var ob in objArray ){
+        		objArray[ob][2] += deltaTime;
+        		//objArray[ob][2] = Math.min(objArray[ob][2], objArray[ob][1][4] - objArray[ob][0][4]);
+        		//log(objArray[ob][2] + " delta time: " + deltaTime);
+        	}
+        }
+        
+        function interpolateObj(objectEntry){
+        	//[[x, y, width, height, timestamp], [x, y, width, height, timestamp], timeSinceLast]
+        	//log(objectEntry.toString());
+        	var period = objectEntry[1][4] - objectEntry[0][4];
+        	var interpValue = 0;
+        	log(period);
+        	if(period)
+        		interpValue = objectEntry[2] / period;
+        	//log(period + " " + interpValue);
+        	log("uh oh");
+        	interpValue = Math.min(Math.max(interpValue, 0), 1);
+        	log("uh oh matt");
+        	return [objectEntry[0][0] * (1-interpValue) + objectEntry[1][0] * interpValue,
+        			objectEntry[0][1] * (1-interpValue) + objectEntry[1][1] * interpValue,
+        			objectEntry[1][2],
+        			objectEntry[1][3],
+        			objectEntry[0][4]];
+        }
+
+        var myGameArea = {
+            canvas: document.createElement("canvas"),
+            start: function () {
+                this.canvas.width = 950;
+                this.canvas.height = 550;
+                this.context = this.canvas.getContext("2d");
+                document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                window.addEventListener('keydown', function (e) {
+                    myGameArea.keys = (myGameArea.keys || []);
+                    myGameArea.keys[e.keyCode] = true;
+                })
+                window.addEventListener('keyup', function (e) {
+                    myGameArea.keys[e.keyCode] = false;
+                })
+            },
+
+            clear: function () {
+                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
+        function component(width, height, color, x, y, type)
+        {
+        	this.type = type;
+            this.width = width;
+            this.height = height;
+            this.speedX = 0;
+            this.speedY = 0;
+            this.x = x;
+            this.y = y;
+            this.update = function ()
+            {
+                ctx = myGameArea.context;
+                if(this.type == "text")
+                {
+                	ctx.font = this.width + " " + this.height;
+                	ctx.fillStyle = color;
+                	ctx.fillText(this.text, this.x, this.y);
+                }
+                else
+                {
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+            this.newPos = function()
+            {
+                this.x += this.speedX;
+                this.y += this.speedY;
+            }
+        }
+        
+        /*
+        
+        //change to reflect the new data structure
+        
+        var count = 0;
+        function updateGameArea(deltaTime)
+        {
+           if (myGameArea.keys && myGameArea.keys[38]) {
+               if (paddleDirection == 0)
+               {
+                   this.send("MOVE:-1.0:" + d.getTime());
+                   objArray[clientID][1] += -1.0;
+                   messageArray[clientID] = objArray[clientID];
+               }
+               else if (paddleDirection == 1)
+               {
+                   this.send("MOVE:-1.0:" + d.getTime());
+                   objArray[clientID][0] += -1.0;
+                   messageArray[clientID] = objArray[clientID];
+               }
+           }
+           if (myGameArea.keys && myGameArea.keys[40]) {
+               if (paddleDirection == 0)
+               {
+                   this.send("MOVE:1.0:" + d.getTime());
+                   objArray[clientID][1] += 1.0;
+                   messageArray[clientID] = objArray[clientID];
+                   
+               }
+               else if (paddleDirection == 1)
+               {
+                   this.send("MOVE:1.0:" + d.getTime());
+                   objArray[clientID][0] += 1.0;
+                   messageArray[clientID] = objArray[clientID];
+               }
+           }
+        }
+        */
+
+
+
+	</script>
+</head>
+
+<body onload="startGame()">
+    <div id='body'>
+        PlayerID: <input type='text' id='PlayerID' name='PlayerID'>
+        Server ip: <input type='text' id='ip' name='ip'>
+        Server port: <input type='text' id='port' name='port'>
+        <button type="button" id='cntBtn' onclick="connect();">Connect</button>
+        <button type="button" id='dscBtn' onclick="disconnect();">Disconnect</button> <br />
+        <!--Channel/Port 1 <input type="radio" name="channel" value="8000" /> &nbsp;
+        Channel/Port 2 <input type="radio" name="channel" value="8001" /> &nbsp;
+        Channel/Port 3 <input type="radio" name="channel" value="8002" /> &nbsp;
+        Channel/Port 4 <input type="radio" name="channel" value="8003" />-->
+        <textarea id='log' name='log' readonly='readonly'>LOG AREA</textarea><br />
+        <input type='text' id='message' name='message' />
+
+    </div>
+</body>
+
+</html>
